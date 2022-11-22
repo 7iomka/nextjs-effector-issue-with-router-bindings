@@ -52,7 +52,7 @@
     "jest-serializer-path": "^0.1.15",
     "nanoid": "^3.0.0",
     "next": "12.1.6",
-    "patronum": "^1.8.2",
+    "patronum": "^1.12.3",
     "postcss": "^8.4.14",
     "react": "18.1.0",
     "react-dom": "18.1.0",
