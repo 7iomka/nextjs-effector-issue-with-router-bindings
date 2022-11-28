@@ -1,4 +1,4 @@
-import { useUnit } from 'effector-react'
+import { useEvent, useUnit } from 'effector-react/scope'
 import { useRouter } from 'next/router'
 import { ReactNode, useEffect } from 'react'
 import { navigationModel } from '@app/entities/navigation'
@@ -12,10 +12,13 @@ export interface Props {
 }
 
 export function BaseLayout({ header = <Header />, title, content }: Props) {
-  const [attachRouterEvent, callFetchEvent] = useUnit([
-    navigationModel.attachRouter,
-    navigationModel.callFetch,
-  ])
+  // const [attachRouterEvent, callFetchEvent] = useUnit([
+  //   navigationModel.attachRouter,
+  //   navigationModel.callFetch,
+  // ])
+
+  const attachRouterEvent = useEvent(navigationModel.attachRouter);
+  const callFetchEvent = useEvent(navigationModel.callFetch)
   const router = useRouter()
 
   // attach router on router change

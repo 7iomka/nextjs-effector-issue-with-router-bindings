@@ -59,11 +59,22 @@ export function createGIPFactory({
 
       const normalizedContext = ContextNormalizers.getInitialProps(context)
 
-      const scope = state.clientScope ?? createServerScope(context)
+      console.log('GIP clientScope', state.clientScope)
+      const nScope = createServerScope(context)
+      const scope = state.clientScope ?? nScope
 
       for (const event of events) {
-        await allSettled(event, { scope, params: normalizedContext })
+        console.log('GIP Event START AWAIT', event.sid)
+
+        const result = await allSettled(event, {
+          scope,
+          params: normalizedContext,
+        })
+
+        console.log('GIP Event SETTLED', event.sid, result)
       }
+
+      console.log('GIP: after awaiting events')
 
       /*
        * On client-side, save the newly created Scope inside scopeMap
