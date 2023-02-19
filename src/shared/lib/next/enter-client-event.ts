@@ -1,4 +1,4 @@
-import { useEvent } from 'effector-react'
+import { useEvent } from 'effector-react/scope'
 import { useRouter } from 'next/router'
 import type { EmptyOrPageEvent } from 'nextjs-effector'
 import { assertStrict, ContextNormalizers } from 'nextjs-effector'

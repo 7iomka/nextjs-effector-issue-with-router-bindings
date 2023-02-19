@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useStore } from 'effector-react'
+import { useStore } from 'effector-react/scope'
 import Link from 'next/link'
 import { $authenticatedUser } from '@app/entities/authenticated-user'
 import { paths } from '@app/shared/routing'
