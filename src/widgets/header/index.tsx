@@ -30,25 +30,19 @@ export function Header() {
 
   return (
     <header className={styles.header}>
-      <Link href={paths.home()} passHref>
-        <a className={clsx([styles.navlink, styles.logo])} href="_">
-          Effector + Next.js
-        </a>
+      <Link href={paths.home()} className={clsx([styles.navlink, styles.logo])}>
+        Effector + Next.js
       </Link>
       <nav className={styles.navbar}>
         {routes.map((route) => (
-          <Link key={route.path} href={route.path} passHref>
-            <a className={styles.navlink} href="_">
-              {route.title}
-            </a>
+          <Link key={route.path} href={route.path} className={styles.navlink}>
+            {route.title}
           </Link>
         ))}
       </nav>
       {user && (
-        <Link href={paths.me()} passHref>
-          <a className={styles.navlink} href="_">
-            Welcome, {user.firstName}!
-          </a>
+        <Link href={paths.me()} className={styles.navlink}>
+          Welcome, {user.firstName}!
         </Link>
       )}
     </header>

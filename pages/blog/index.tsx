@@ -1,15 +1,18 @@
-import { NextPage } from 'next'
 import { usePageEvent } from 'nextjs-effector'
+import { ReactNode } from 'react'
 import { BlogPage, pageStarted } from '@app/pages/blog'
-import { createGSP } from '@app/pages/shared/bindings'
 import { appStarted } from '@app/pages/shared/model'
+import { createGSP } from '@/app/page-factories/base-layout-pages'
+import { BaseLayout } from '@/widgets/layouts/base-layout'
 
-const Page: NextPage = () => {
+const Page = () => {
   console.info('[Render] BlogPage')
 
   usePageEvent(appStarted, { runOnce: true })
   return <BlogPage />
 }
+
+Page.getLayout = (page: ReactNode) => <BaseLayout>{page}</BaseLayout>
 
 export const getStaticProps = createGSP({
   pageEvent: pageStarted,

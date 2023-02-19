@@ -1,1 +1,1 @@
-export * as navigationModel from './navigation.model'
+export * as $$navigation from './navigation.model'

@@ -1,63 +1,104 @@
-import { attach, createEffect, createEvent, restore, sample } from 'effector'
+import {
+  attach,
+  createEffect,
+  createEvent,
+  createStore,
+  sample,
+} from 'effector'
+import { createGate } from 'effector-react/scope'
+import deepEqual from 'fast-deep-equal'
+import type { NextRouter } from 'next/router'
 import { debug } from 'patronum/debug'
+import type { ParsedUrlQuery } from 'querystring'
+import { getUrlWithoutOriginFromUrlObject } from '@/shared/lib/next'
+import { getNormalizedQueryParamsFromRouter } from './navigation.lib'
+import type { NextHistoryState } from './navigation.types'
 
-export const attachRouter = createEvent<any>()
-export const $router = restore(attachRouter, null)
-export const $queryParams = $router.map((router) => router?.query ?? {})
-export const $url = $router.map((router) => router?.asPath ?? '')
+export const routerUpdated = createEvent<NextRouter | null>()
+export const historyChanged = createEvent<string>()
+export const beforePopstateChanged = createEvent<NextHistoryState>()
+
+export const RouterGate = createGate<{ router: NextRouter | null }>(null!)
+
+export const $router = createStore<NextRouter | null>(null, {
+  serialize: 'ignore',
+})
+  .on(RouterGate.open, (_, { router }) => {
+    return router
+  })
+  .reset(RouterGate.close)
+
+// export const $router = restore(routerInitialized, null);
+
+export const $isRouterInitialized = createStore(false)
+  .on(RouterGate.open, () => true)
+  .reset(RouterGate.close)
+
+export const $queryParams = createStore<ParsedUrlQuery | null>(null, {
+  updateFilter: deepEqual,
+})
+
+export const $url = createStore('')
+
+// Set url on router initialize
+sample({
+  clock: RouterGate.open,
+  fn: ({ router }) => router!.asPath,
+  target: $url,
+})
+
+// Update url on history change
+sample({
+  clock: historyChanged,
+  target: $url,
+})
+
+// Set query params on router initialize (not exist with ssg first load, skip it)
+sample({
+  clock: RouterGate.open,
+  filter: ({ router }) => Boolean(router?.isReady),
+  fn: ({ router }) => getNormalizedQueryParamsFromRouter(router),
+  target: $queryParams,
+})
+
+// Update query on routerUpdated (only if ready (mounted))
+sample({
+  clock: routerUpdated,
+  source: RouterGate.state,
+  filter: ({ router }) => router !== null,
+  fn: ({ router }) => getNormalizedQueryParamsFromRouter(router),
+  target: $queryParams,
+})
 
 export const pushFx = attach({
   source: $router,
-  effect(router, { url, options = {} }) {
-    console.log('PUSH FX triggered', {
-      router,
+  effect(
+    router,
+    {
       url,
-      options,
-      asPath: router?.asPath,
-    })
+      options = {},
+    }: { url: NextHistoryState['url']; options?: NextHistoryState['options'] }
+  ) {
     return router?.push(url, undefined, options)
   },
 })
 
-// effect to update location search part using router
-export const setQueryFx = attach({
-  source: $router,
-  effect(router, query: { [key: string]: string | string[] | undefined }) {
-    // const {url: pageParam, ...onlyRealQueryParams} =  (router?.query || {})
-    const newQuery = {
-      ...(router?.query || {}),
-    }
-
-    for (const [key, val] of Object.entries(query)) {
-      if (newQuery[key] && val === undefined) {
-        delete newQuery[key]
-      } else {
-        newQuery[key] = val
-      }
-    }
-
-    router?.push(
-      {
-        pathname: router.pathname,
-        query: newQuery,
-      },
-      undefined,
-      {
-        shallow: true,
-        scroll: false,
-      }
-    )
-
-    console.log('router to push from set query', { query, newQuery })
-  },
+// Update url on push
+sample({
+  clock: pushFx.done,
+  fn: ({ params: { url } }) =>
+    typeof url === 'string' ? url : getUrlWithoutOriginFromUrlObject(url),
+  target: $url,
 })
 
-// effect to get location search part using router
-export const getLocationFx = attach({
-  source: $router,
-  effect(router) {
-    return router?.asPath ?? null
-  },
+debug({
+  $url,
+  $queryParams,
+  pushFx,
+  $isRouterInitialized,
+  RouterGateState: RouterGate.state,
+  RouterGateOpenEvent: RouterGate.open,
+  RouterGateCloseEvent: RouterGate.close,
 })
 
 // JUST FOR DEMO
@@ -77,5 +118,3 @@ sample({
   }),
   target: pushFx,
 })
-
-debug(attachRouter, $router, callFetch, fetchFx, pushFx)

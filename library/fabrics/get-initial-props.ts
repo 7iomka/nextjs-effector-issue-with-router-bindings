@@ -23,7 +23,7 @@ export type CustomizeGIP<P extends AnyProps = AnyProps> = (
   params: CustomizeGIPParams
 ) => P | Promise<P>
 
-export interface CreateGIPConfig<P> {
+export interface CreateGIPConfig<P extends AnyProps> {
   pageEvent?: EmptyOrPageEvent<any, any>
   customize?: CustomizeGIP<P>
 }
@@ -59,30 +59,17 @@ export function createGIPFactory({
 
       const normalizedContext = ContextNormalizers.getInitialProps(context)
 
-      console.log('GIP clientScope', state.clientScope)
-      const nScope = createServerScope(context)
-      const scope = state.clientScope ?? nScope
+      // const scope = state.clientScope ?? createServerScope(context)
+      /**
+       * NOTE: now we always create the new scope
+       * Because otherwise we get in an incomprehensible freeze process waiting
+       * for all events in the already existing scope
+       * This also prevents some stores related with router events still use the old scope
+       */
+      const scope = createServerScope(context)
 
       for (const event of events) {
-        console.log('GIP Event START AWAIT', event.sid)
-
-        const result = await allSettled(event, {
-          scope,
-          params: normalizedContext,
-        })
-
-        console.log('GIP Event SETTLED', event.sid, result)
-      }
-
-      console.log('GIP: after awaiting events')
-
-      /*
-       * On client-side, save the newly created Scope inside scopeMap
-       * We need it to access on user navigation (see code above)
-       */
-      if (env.isClient) {
-        // eslint-disable-next-line require-atomic-updates
-        state.clientScope = scope
+        await allSettled(event, { scope, params: normalizedContext })
       }
 
       /*
@@ -94,13 +81,22 @@ export function createGIPFactory({
         : ({} as P)
 
       /*
+       * On client-side, save the newly created Scope inside scopeMap
+       * We need it to access on user navigation (see code above)
+       */
+      if (env.isClient) {
+        // eslint-disable-next-line require-atomic-updates
+        state.clientScope = scope
+      }
+
+      /*
        * Serialize after customize to include user operations
        */
       const effectorProps = {
         [INITIAL_STATE_KEY]: serialize(scope),
       }
 
-      return Object.assign(userProps, effectorProps)
+      return { ...userProps, ...effectorProps }
     }
   }
 }

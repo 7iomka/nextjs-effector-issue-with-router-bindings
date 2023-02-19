@@ -1,14 +1,13 @@
 import { useStore } from 'effector-react'
-import { BaseTemplate } from '@app/computed/widgets/layouts'
 import { $authenticatedUser } from '@app/entities/authenticated-user'
 
 export function HomePage() {
   const user = useStore($authenticatedUser)
 
   return (
-    <BaseTemplate
-      title="Home"
-      content={<pre>User: {JSON.stringify(user, null, 2)}</pre>}
-    />
+    <section>
+      <h2 className="text-lg">Home</h2>
+      <pre className="mt-3">User: {JSON.stringify(user, null, 2)}</pre>
+    </section>
   )
 }

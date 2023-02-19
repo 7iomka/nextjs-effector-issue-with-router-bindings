@@ -1,5 +1,4 @@
 import { useStore } from 'effector-react'
-import { BaseTemplate } from '@app/computed/widgets/layouts'
 import { $categories, $post } from './model'
 
 export function BlogPostPage() {
@@ -11,26 +10,24 @@ export function BlogPostPage() {
   }
 
   return (
-    <BaseTemplate
-      title={post.title}
-      content={
-        <>
-          <div className="flex gap-2">
-            <span>Categories:</span>
-            <ul className="flex gap-2">
-              {categories.map((category, index) => {
-                return (
-                  <li key={category.id}>
-                    {category.name}
-                    {index + 1 !== categories.length && ','}
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-          <article className="mt-6">{post.content}</article>
-        </>
-      }
-    />
+    <section>
+      <h2 className="text-lg">post.title</h2>
+      <div className="mt-3">
+        <div className="flex gap-2">
+          <span>Categories:</span>
+          <ul className="flex gap-2">
+            {categories.map((category, index) => {
+              return (
+                <li key={category.id}>
+                  {category.name}
+                  {index + 1 !== categories.length && ','}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+        <article className="mt-6">{post.content}</article>
+      </div>
+    </section>
   )
 }

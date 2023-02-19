@@ -1,3 +1,5 @@
+/* eslint-disable react/jsx-key */
+/* eslint-disable no-lonely-if */
 import { fork, serialize, ValueMap } from 'effector'
 import { Provider } from 'effector-react/scope'
 import { NextComponentType } from 'next'
@@ -23,18 +25,20 @@ export function useScope(values: ValueMap = {}) {
   if (!state.clientScope) {
     state.clientScope = fork({ values })
     valuesRef.current = JSON.stringify(values)
-  } else if (JSON.stringify(values) !== valuesRef.current) {
+  } else {
     /*
      * Values have changed, most likely it's happened on the user navigation
      * Create the new Scope from the old one and save it as before
      */
-    const currentValues = serialize(state.clientScope)
-    const nextValues = Object.assign({}, currentValues, values)
+    if (JSON.stringify(values) !== valuesRef.current) {
+      const currentValues = serialize(state.clientScope)
+      const nextValues = Object.assign({}, currentValues, values)
 
-    state.clientScope = fork({ values: nextValues })
-    valuesRef.current = JSON.stringify(values)
-  } else {
-    console.info('skip hydration')
+      state.clientScope = fork({ values: nextValues })
+      valuesRef.current = JSON.stringify(values)
+    } else if (process.env.NEXT_PUBLIC_APP_STAGE !== 'production') {
+      console.info('skip hydration')
+    }
   }
 
   return state.clientScope
@@ -46,9 +50,14 @@ export function withEffector(App: NextComponentType<AppContext, any, any>) {
 
     const scope = useScope(initialState)
 
+    // Note: Key fixes issue https://t.me/effector_ru/273057 (we removed it)
     return (
       <Provider value={scope}>
-        <App {...props} pageProps={pageProps} />
+        <App
+          {...props}
+          key={(scope as any)?.graphite?.id || '0'}
+          pageProps={pageProps}
+        />
       </Provider>
     )
   }

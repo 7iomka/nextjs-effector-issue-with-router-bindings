@@ -1,14 +1,15 @@
-import { NextPage } from 'next'
 import NextErrorPage from 'next/error'
+import { ReactNode } from 'react'
 import { MyProfilePage, pageStarted } from '@app/pages/my-profile'
 import { $bio } from '@app/pages/my-profile/model'
-import { createGIP } from '@app/pages/shared'
+import { createGIP } from '@/app/page-factories/base-layout-pages'
+import { BaseLayout } from '@/widgets/layouts/base-layout'
 
 interface Props {
   notFound?: boolean
 }
 
-const Page: NextPage<Props> = ({ notFound }) => {
+const Page = ({ notFound }: Props) => {
   console.info('[Render] ProfilePage')
 
   if (notFound) {
@@ -17,6 +18,8 @@ const Page: NextPage<Props> = ({ notFound }) => {
 
   return <MyProfilePage />
 }
+
+Page.getLayout = (page: ReactNode) => <BaseLayout>{page}</BaseLayout>
 
 Page.getInitialProps = createGIP<Props>({
   pageEvent: pageStarted,

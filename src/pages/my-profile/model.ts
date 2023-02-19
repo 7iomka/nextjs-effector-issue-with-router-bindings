@@ -1,4 +1,5 @@
 import { attach, createEvent, restore, sample } from 'effector'
+import { debug } from 'patronum/debug'
 import { localApi } from '@app/shared/api'
 
 export const pageStarted = createEvent()
@@ -11,3 +12,5 @@ sample({
   clock: pageStarted,
   target: loadBioFx,
 })
+
+debug({ $bio })
