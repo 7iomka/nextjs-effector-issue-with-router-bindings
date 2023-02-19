@@ -53,11 +53,7 @@ export function withEffector(App: NextComponentType<AppContext, any, any>) {
     // Note: Key fixes issue https://t.me/effector_ru/273057 (we removed it)
     return (
       <Provider value={scope}>
-        <App
-          {...props}
-          key={(scope as any)?.graphite?.id || '0'}
-          pageProps={pageProps}
-        />
+        <App {...props} pageProps={pageProps} />
       </Provider>
     )
   }
