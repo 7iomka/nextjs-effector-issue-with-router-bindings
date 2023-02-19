@@ -11,7 +11,7 @@ export function BlogPostPage() {
 
   return (
     <section>
-      <h2 className="text-lg">post.title</h2>
+      <h2 className="text-lg">{post.title}</h2>
       <div className="mt-3">
         <div className="flex gap-2">
           <span>Categories:</span>
