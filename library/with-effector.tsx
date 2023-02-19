@@ -1,4 +1,4 @@
-import { fork, serialize } from 'effector'
+import { fork, serialize, ValueMap } from 'effector'
 import { Provider } from 'effector-react/scope'
 import { NextComponentType } from 'next'
 import { AppContext, AppProps } from 'next/app'
@@ -7,12 +7,9 @@ import { INITIAL_STATE_KEY } from './constants'
 import { env } from './env'
 import { state } from './state'
 
-interface Values {
-  [sid: string]: any
-}
-
-export function useScope(values: Values = {}) {
-  const valuesRef = useRef<Values | null>(null)
+export function useScope(values: ValueMap = {}) {
+  // Note: We compare stringyfied values to fix comparation of 2 empty objects
+  const valuesRef = useRef<string | null>(null)
 
   if (env.isServer) {
     return fork({ values })
@@ -25,19 +22,19 @@ export function useScope(values: Values = {}) {
    */
   if (!state.clientScope) {
     state.clientScope = fork({ values })
-    valuesRef.current = values
-  }
-
-  /*
-   * Values have changed, most likely it's happened on the user navigation
-   * Create the new Scope from the old one and save it as before
-   */
-  if (values !== valuesRef.current) {
+    valuesRef.current = JSON.stringify(values)
+  } else if (JSON.stringify(values) !== valuesRef.current) {
+    /*
+     * Values have changed, most likely it's happened on the user navigation
+     * Create the new Scope from the old one and save it as before
+     */
     const currentValues = serialize(state.clientScope)
     const nextValues = Object.assign({}, currentValues, values)
 
     state.clientScope = fork({ values: nextValues })
-    valuesRef.current = values
+    valuesRef.current = JSON.stringify(values)
+  } else {
+    console.info('skip hydration')
   }
 
   return state.clientScope
