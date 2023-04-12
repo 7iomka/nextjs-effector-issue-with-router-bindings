@@ -61,9 +61,12 @@ export function createGIPFactory({
 
       const scope = state.clientScope ?? createServerScope(context)
 
+      console.log('BEFORE')
       for (const event of events) {
         await allSettled(event, { scope, params: normalizedContext })
       }
+
+      console.log('AFTER')
 
       /*
        * On client-side, save the newly created Scope inside scopeMap
