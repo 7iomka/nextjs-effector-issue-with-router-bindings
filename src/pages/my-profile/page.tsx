@@ -1,10 +1,10 @@
-import { useStore } from 'effector-react/scope'
+import { useUnit } from 'effector-react'
 import { $authenticatedUser } from '@app/entities/authenticated-user'
 import { $bio } from './model'
 
 export function MyProfilePage() {
-  const user = useStore($authenticatedUser)
-  const bio = useStore($bio)
+  const user = useUnit($authenticatedUser)
+  const bio = useUnit($bio)
 
   return (
     <section>

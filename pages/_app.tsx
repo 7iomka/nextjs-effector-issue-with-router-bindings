@@ -1,7 +1,7 @@
 import '@fontsource/acme'
 import '@fontsource/fira-mono'
 import '@app/shared/ui/globals.css'
-import { useGate, useUnit } from 'effector-react/scope'
+import { useGate, useUnit } from 'effector-react'
 import { NextPage } from 'next'
 import { AppProps } from 'next/app'
 import { useRouter } from 'next/router'

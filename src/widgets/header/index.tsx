@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useStore } from 'effector-react/scope'
+import { useUnit } from 'effector-react'
 import Link from 'next/link'
 import { $authenticatedUser } from '@app/entities/authenticated-user'
 import { paths } from '@app/shared/routing'
@@ -26,7 +26,7 @@ const routes: Route[] = [
 ]
 
 export function Header() {
-  const user = useStore($authenticatedUser)
+  const user = useUnit($authenticatedUser)
 
   return (
     <header className={styles.header}>

@@ -55,17 +55,6 @@ export function createGSPFactory({
     D
   > {
     return async function getStaticProps(context) {
-      // Fix strange case when `/<no source>` or static files is passed for catchAll entry for some reason
-      if (
-        ['<no source>', 'static'].includes(context.params?.url?.[0] as string)
-      ) {
-        console.error(
-          'Strange case when `/<no source>` or static files is passed for catchAll entry'
-        )
-        return {
-          notFound: true,
-        }
-      }
       /*
        * In GSP, always run both "sharedEvents" and "pageEvent"
        */
@@ -106,7 +95,7 @@ export function createGSPFactory({
       /*
        * Mix serialized Effector Scope values into the user props
        */
-      gspResult.props = { ...gspResult.props, ...effectorProps }
+      Object.assign(gspResult.props, effectorProps)
 
       return gspResult
     }

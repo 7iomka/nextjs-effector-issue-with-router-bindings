@@ -1,4 +1,4 @@
-import { useEvent } from 'effector-react/scope'
+import { useUnit } from 'effector-react'
 import { useRouter } from 'next/router'
 import type { EmptyOrPageEvent } from 'nextjs-effector'
 import { assertStrict, ContextNormalizers } from 'nextjs-effector'
@@ -8,7 +8,7 @@ export function useEnterClientEvent(event: EmptyOrPageEvent<any, any>) {
   assertStrict(event)
 
   const router = useRouter()
-  const boundEvent = useEvent(event)
+  const boundEvent = useUnit(event)
 
   useEffect(() => {
     const context = ContextNormalizers.router(router)

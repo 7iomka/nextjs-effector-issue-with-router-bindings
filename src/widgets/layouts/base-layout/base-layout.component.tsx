@@ -1,4 +1,4 @@
-import {  useUnit } from 'effector-react/scope'
+import { useUnit } from 'effector-react'
 import { PropsWithChildren, ReactNode } from 'react'
 import { $$navigation } from '@app/entities/navigation'
 import { Header } from '@app/widgets/header'

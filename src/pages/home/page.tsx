@@ -1,8 +1,8 @@
-import { useStore } from 'effector-react/scope'
+import { useUnit } from 'effector-react'
 import { $authenticatedUser } from '@app/entities/authenticated-user'
 
 export function HomePage() {
-  const user = useStore($authenticatedUser)
+  const user = useUnit($authenticatedUser)
 
   return (
     <section>

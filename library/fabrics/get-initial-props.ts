@@ -59,26 +59,11 @@ export function createGIPFactory({
 
       const normalizedContext = ContextNormalizers.getInitialProps(context)
 
-      // const scope = state.clientScope ?? createServerScope(context)
-      /**
-       * NOTE: now we always create the new scope
-       * Because otherwise we get in an incomprehensible freeze process waiting
-       * for all events in the already existing scope
-       * This also prevents some stores related with router events still use the old scope
-       */
-      const scope = createServerScope(context)
+      const scope = state.clientScope ?? createServerScope(context)
 
       for (const event of events) {
         await allSettled(event, { scope, params: normalizedContext })
       }
-
-      /*
-       * Get user's GIP props
-       * Fallback to empty object if no custom GIP used
-       */
-      const userProps = customize
-        ? await customize({ scope, context })
-        : ({} as P)
 
       /*
        * On client-side, save the newly created Scope inside scopeMap
@@ -90,13 +75,21 @@ export function createGIPFactory({
       }
 
       /*
+       * Get user's GIP props
+       * Fallback to empty object if no custom GIP used
+       */
+      const userProps = customize
+        ? await customize({ scope, context })
+        : ({} as P)
+
+      /*
        * Serialize after customize to include user operations
        */
       const effectorProps = {
         [INITIAL_STATE_KEY]: serialize(scope),
       }
 
-      return { ...userProps, ...effectorProps }
+      return Object.assign(userProps, effectorProps)
     }
   }
 }

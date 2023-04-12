@@ -1,9 +1,9 @@
-import { useStore } from 'effector-react/scope'
+import { useUnit } from 'effector-react'
 import { $categories, $post } from './model'
 
 export function BlogPostPage() {
-  const post = useStore($post)
-  const categories = useStore($categories)
+  const post = useUnit($post)
+  const categories = useUnit($categories)
 
   if (!post) {
     return null

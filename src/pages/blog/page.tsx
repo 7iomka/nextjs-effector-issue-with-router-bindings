@@ -1,10 +1,10 @@
-import { useStore } from 'effector-react/scope'
+import { useUnit } from 'effector-react'
 import Link from 'next/link'
 import { paths } from '@app/shared/routing'
 import { $posts } from './model'
 
 export function BlogPage() {
-  const posts = useStore($posts)
+  const posts = useUnit($posts)
 
   return (
     <section>

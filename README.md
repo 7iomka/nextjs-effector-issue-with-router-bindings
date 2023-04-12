@@ -1,24 +1,29 @@
 ## Navigation
 
+- [Navigation](#navigation)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Initial setup](#initial-setup)
   - [Main Concepts](#main-concepts)
   - [Factories](#factories)
-    - [`getInitialProps`](#getinitialprops-server-and-client-side)
-    - [`getServerSideProps`](#getserversideprops-only-server-side)
-    - [`getStaticProps`](#getstaticprops-only-server-side)
+    - [`getInitialProps` (server and client side)](#getinitialprops-server-and-client-side)
+    - [`getServerSideProps` (only server side)](#getserversideprops-only-server-side)
+    - [`getStaticProps` (only server side)](#getstaticprops-only-server-side)
   - [Advanced Page Events Usage](#advanced-page-events-usage)
-    - [`usePageEvent`](#usepageevent-only-client-side)
-    - [`enhancePageEvent`](#enhancepageevent-manual-flow-control)
+    - [`usePageEvent` (useful on client side)](#usepageevent-useful-on-client-side)
+    - [`enhancePageEvent` (manual flow control)](#enhancepageevent-manual-flow-control)
+    - [Utility functions](#utility-functions)
 - [Recipes](#recipes)
   - [Cookies](#cookies)
 - [Common Questions](#common-questions)
-- [Contrubuting](#contributing)
+  - [Where should I call createGIPFactory / createGSSPFactory / createGSPFactory?](#where-should-i-call-creategipfactory--creategsspfactory--creategspfactory)
+  - [Why in GSSP the shared events are called on each request?](#why-in-gssp-the-shared-events-are-called-on-each-request)
+  - [I need to run sharedEvents and pageEvent in parallel. How can I do that?](#i-need-to-run-sharedevents-and-pageevent-in-parallel-how-can-i-do-that)
+- [Contributing](#contributing)
 - [Maintenance](#maintenance)
   - [Regular flow](#regular-flow)
-  - [Prerelease from](#prerelease-flow)
+  - [Prerelease flow](#prerelease-flow)
   - [Conventions](#conventions)
 
 ## Requirements
@@ -56,13 +61,11 @@ At first, add `effector/babel-plugin` to your `.babelrc`:
 ```json
 {
   "presets": ["next/babel"],
-  "plugins": [["effector/babel-plugin", { "reactSsr": true }]]
+  "plugins": ["effector/babel-plugin"]
 }
 ```
 
 By doing that, all our Effector units will be created with unique `sid` constant, so we can safely serialize them for sending to the client.
-
-The `reactSsr` option is used to replace all `effector-react` imports with `effector-react/scope` version to ensure that `useStore`, `useEvent`, and the other hooks use the scope that is passed using `Provider`.
 
 Also, check your `effector` and `effector-react` versions: they should match the requirements.
 

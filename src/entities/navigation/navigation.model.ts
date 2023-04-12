@@ -5,7 +5,7 @@ import {
   createStore,
   sample,
 } from 'effector'
-import { createGate } from 'effector-react/scope'
+import { createGate } from 'effector-react'
 import deepEqual from 'fast-deep-equal'
 import type { NextRouter } from 'next/router'
 import { debug } from 'patronum/debug'
