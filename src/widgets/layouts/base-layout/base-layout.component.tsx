@@ -1,6 +1,6 @@
 import { useUnit } from 'effector-react'
 import { PropsWithChildren, ReactNode } from 'react'
-import { $$navigation } from '@app/entities/navigation'
+import { callFetch } from '@app/entities/navigation'
 import { Header } from '@app/widgets/header'
 import styles from './styles.module.css'
 
@@ -14,7 +14,7 @@ export function BaseLayout({
   children,
 }: PropsWithChildren<BaseLayoutProps>) {
   // demo event
-  const callFetchEvent = useUnit($$navigation.callFetch)
+  const callFetchEvent = useUnit(callFetch)
 
   return (
     <>

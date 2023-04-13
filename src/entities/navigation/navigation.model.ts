@@ -1,120 +1,197 @@
-import {
-  attach,
-  createEffect,
-  createEvent,
-  createStore,
-  sample,
-} from 'effector'
-import { createGate } from 'effector-react'
-import deepEqual from 'fast-deep-equal'
-import type { NextRouter } from 'next/router'
-import { debug } from 'patronum/debug'
-import type { ParsedUrlQuery } from 'querystring'
-import { getUrlWithoutOriginFromUrlObject } from '@/shared/lib/next'
-import { getNormalizedQueryParamsFromRouter } from './navigation.lib'
-import type { NextHistoryState } from './navigation.types'
+import type { ParsedUrlQuery } from 'querystring';
+import { createEvent, attach, createStore, sample } from 'effector';
+import type { NextRouter } from 'next/router';
+import { debug } from 'patronum/debug';
+import { createGate } from 'effector-react';
+import equal from 'fast-deep-equal';
+import { getUrlWithoutOriginFromUrlObject } from '@/shared/lib/url';
+import { getQueryParamsFromPath } from '@/shared/lib/next';
+import { atom } from '@/shared/lib/atom';
+import type { NextHistoryState } from './navigation.types';
 
-export const routerUpdated = createEvent<NextRouter | null>()
-export const historyChanged = createEvent<string>()
-export const beforePopstateChanged = createEvent<NextHistoryState>()
+export const $$navigation = atom(() => {
+  /**
+   * This event is triggered when `asPath` changes
+   * and only when it is ready (`isReady` flag)
+   * Triggered on RouterGate updates
+   */
+  const routerUpdated = createEvent<NextRouter | null>();
+  const queryParamsChangeRequested = createEvent<ParsedUrlQuery>();
+  const queryParamsChangeFromEmptyRequested = createEvent<ParsedUrlQuery>();
+  const queryParamsChanged = createEvent<ParsedUrlQuery>();
+  const beforePopstateChanged = createEvent<NextHistoryState>();
 
-export const RouterGate = createGate<{ router: NextRouter | null }>(null!)
+  /**
+   * Gate for next router,
+   * => null, when page is not mounted / on unmount
+   * => router state, when page is mounted
+   */
+  const RouterGate = createGate<NextRouter | null>(null!);
 
-export const $router = createStore<NextRouter | null>(null, {
-  serialize: 'ignore',
-})
-  .on(RouterGate.open, (_, { router }) => {
-    return router
-  })
-  .reset(RouterGate.close)
+  /**
+   * Router store (not serializable)
+   * NOTE: router state is updated silently, so, don't use it as as clock!
+   * IMPORTANT: don't try to use source from `routerUpdated` event, because of scope lost issue
+   */
+  const $router = createStore<NextRouter | null>(null);
 
-// export const $router = restore(routerInitialized, null);
+  // Trigger routerUpdated event when `asPath` changed
+  sample({
+    clock: RouterGate.state,
+    source: $router,
+    filter: (lastRouter, newRouter) => lastRouter?.asPath !== newRouter?.asPath,
+    fn: (_, router) => (router?.asPath ? router : null),
+    target: routerUpdated,
+  });
 
-export const $isRouterInitialized = createStore(false)
-  .on(RouterGate.open, () => true)
-  .reset(RouterGate.close)
+  // Update router store on gate state changes
+  sample({
+    clock: RouterGate.state,
+    fn: (router) => (router?.asPath ? router : null),
+    target: $router,
+  });
 
-export const $queryParams = createStore<ParsedUrlQuery | null>(null, {
-  updateFilter: deepEqual,
-})
+  // Update router store on gate open/close
+  sample({
+    clock: RouterGate.open,
+    target: $router,
+  });
 
-export const $url = createStore('')
+  sample({
+    clock: RouterGate.close,
+    fn: () => null,
+    target: $router,
+  });
 
-// Set url on router initialize
-sample({
-  clock: RouterGate.open,
-  fn: ({ router }) => router!.asPath,
-  target: $url,
-})
+  // Custom store for test cases, related to issues with loss of the scope
+  const $isRouterInitialized = createStore(false);
+  sample({
+    clock: RouterGate.open,
+    fn: () => true,
+    target: $isRouterInitialized,
+  });
 
-// Update url on history change
-sample({
-  clock: historyChanged,
-  target: $url,
-})
+  sample({
+    clock: RouterGate.close,
+    fn: () => false,
+    target: $isRouterInitialized,
+  });
 
-// Set query params on router initialize (not exist with ssg first load, skip it)
-sample({
-  clock: RouterGate.open,
-  filter: ({ router }) => Boolean(router?.isReady),
-  fn: ({ router }) => getNormalizedQueryParamsFromRouter(router),
-  target: $queryParams,
-})
+  /**
+   * Prepare query params
+   * NOTE: next.js `query` also contains `params` from dynamic routes,
+   * So we don't use it as a source of truth!
+   * Instead we will use `routerUpdated`, which is triggered whenever
+   * the router changes but only when it `isReady`,
+   */
 
-// Update query on routerUpdated (only if ready (mounted))
-sample({
-  clock: routerUpdated,
-  source: RouterGate.state,
-  filter: ({ router }) => router !== null,
-  fn: ({ router }) => getNormalizedQueryParamsFromRouter(router),
-  target: $queryParams,
-})
+  const $queryParams = createStore<ParsedUrlQuery>({});
 
-export const pushFx = attach({
-  source: $router,
-  effect(
-    router,
-    {
-      url,
-      options = {},
-    }: { url: NextHistoryState['url']; options?: NextHistoryState['options'] }
-  ) {
-    return router?.push(url, undefined, options)
-  },
-})
+  /**
+   * Update query on routerUpdated, extracted from `asPath`,
+   * because we prevented uneccessary clientside updates when only `query` from router changes,
+   * although `asPath` is already with query params
+   * First, target into intermediate event to be able to listen to queryParams before the update
+   */
+  sample({
+    clock: routerUpdated,
+    source: $queryParams,
+    filter: (currentQueryParams, router) =>
+      !equal(getQueryParamsFromPath(router?.asPath), currentQueryParams),
+    fn: (_, router) => getQueryParamsFromPath(router?.asPath),
+    target: queryParamsChangeRequested,
+  });
 
-// Update url on push
-sample({
-  clock: pushFx.done,
-  fn: ({ params: { url } }) =>
-    typeof url === 'string' ? url : getUrlWithoutOriginFromUrlObject(url),
-  target: $url,
-})
+  sample({
+    clock: queryParamsChangeRequested,
+    source: $queryParams.map((v) => Object.keys(v).length === 0),
+    filter: (isQueryParamsEmpty, queryParamsToChange) =>
+      isQueryParamsEmpty && Object.keys(queryParamsToChange).length !== 0,
+    fn: (_, queryParamsToChange) => queryParamsToChange,
+    target: queryParamsChangeFromEmptyRequested,
+  });
 
-debug({
-  $url,
-  $queryParams,
-  pushFx,
-  $isRouterInitialized,
-  RouterGateState: RouterGate.state,
-  RouterGateOpenEvent: RouterGate.open,
-  RouterGateCloseEvent: RouterGate.close,
-})
+  sample({
+    clock: queryParamsChangeRequested,
+    target: $queryParams,
+  });
 
-// JUST FOR DEMO
-export const callFetch = createEvent()
+  sample({
+    clock: $queryParams,
+    target: queryParamsChanged,
+  });
 
-const fetchFx = createEffect(() => Promise.resolve(1))
+  /**
+   * Current page url
+   * NOTE: Don't use it serverside,because of an empty initial
+   * Updated only clientside
+   */
+  const $url = createStore('');
 
-sample({
-  clock: callFetch,
-  target: fetchFx,
-})
+  // Set url on router initialize / `asPath` updated
+  sample({
+    clock: [RouterGate.open, routerUpdated],
+    filter: Boolean,
+    fn: (router) => router.asPath,
+    target: $url,
+  });
 
-sample({
-  clock: fetchFx.done,
-  fn: () => ({
-    url: '/',
-  }),
-  target: pushFx,
-})
+  // Use router.push with options
+  const pushFx = attach({
+    source: $router,
+    effect(
+      router,
+      {
+        url,
+        options = {},
+      }: { url: NextHistoryState['url']; options?: NextHistoryState['options'] },
+    ) {
+      return router?.push(url, undefined, options);
+    },
+  });
+
+  // Update url on push
+  sample({
+    clock: pushFx.done,
+    fn: ({ params: { url } }) =>
+      typeof url === 'string' ? url : getUrlWithoutOriginFromUrlObject(url),
+    target: $url,
+  });
+
+  // Server only units. Updates from serverside events (with fork)
+  const $serverUrl = createStore('');
+  const $serverQueryParams = createStore<ParsedUrlQuery>({});
+
+  if (process.env.NEXT_PUBLIC_APP_STAGE !== 'production') {
+    debug({
+      $url,
+      $queryParams,
+      queryParamsChangeRequested,
+      queryParamsChanged,
+      pushFx,
+      $isRouterInitialized,
+      routerUpdated,
+      RouterGateState: RouterGate.state,
+      RouterGateOpenEvent: RouterGate.open,
+      RouterGateCloseEvent: RouterGate.close,
+      $serverUrl,
+      $serverQueryParams,
+    });
+  }
+
+  return {
+    routerUpdated,
+    queryParamsChangeRequested,
+    queryParamsChangeFromEmptyRequested,
+    queryParamsChanged,
+    beforePopstateChanged,
+    RouterGate,
+    $router,
+    $isRouterInitialized,
+    $queryParams,
+    $url,
+    pushFx,
+    $serverUrl,
+    $serverQueryParams,
+  };
+});

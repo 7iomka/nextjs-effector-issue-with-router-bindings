@@ -1,2 +1,2 @@
-export { useEnterClientEvent } from './enter-client-event'
-export * from './helpers'
+export * from './helpers';
+export { useEnterClientEvent } from './enter-client-event';
