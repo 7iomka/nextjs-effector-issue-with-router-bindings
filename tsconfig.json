@@ -18,8 +18,7 @@
     "paths": {
       "@/*": ["src/*"],
       "@app": ["./src"],
-      "@app/*": ["./src/*"],
-      "nextjs-effector": ["./library"]
+      "@app/*": ["./src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
