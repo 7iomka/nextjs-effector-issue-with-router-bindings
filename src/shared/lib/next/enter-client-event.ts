@@ -4,14 +4,15 @@ import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
 import type { EmptyOrPageEvent, PageContext } from 'nextjs-effector';
 import { ContextNormalizers } from 'nextjs-effector';
-import { assertStrict } from 'nextjs-effector';
+import { assertEventStrict } from '../assert';
+
 
 /**
  * Runs once per `enter` enterClient event when next.js router is ready
  * If you have need for gate status and page context, use `usePageGate` instead
  */
 export const useEnterClientEvent = (event: EmptyOrPageEvent<any, any>) => {
-  assertStrict(event);
+  assertEventStrict(event);
 
   const router = useRouter();
   const boundEvent = useUnit(event);
