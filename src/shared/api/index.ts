@@ -1,12 +1,3 @@
 export * from './local'
-import { routesConfig } from './internal';
+export { api } from './internal';
 
-const api = routesConfig.build();
-
-// Export http instance && types
-export * from './internal';
-
-export * from './error';
-
-// Export api instance
-export { api };

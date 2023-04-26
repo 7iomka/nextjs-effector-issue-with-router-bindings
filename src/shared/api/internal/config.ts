@@ -1,56 +1,41 @@
-import type { AxiosInstance, CreateAxiosDefaults } from 'axios';
+import {
+    createHttp
+} from 'effector-http-api'
 import axios from 'axios';
-import { createHttp } from 'effector-http-api';
-import { createEffect, createStore, sample } from 'effector';
-import { addTakeLast } from './lib';
 
-// default axios config
-const defaultConfig: Parameters<typeof axios.create>[0] = {
-  baseURL: 'http://localhost:3001',
-  withCredentials: true,
-};
+const instance = axios.create()
+const http = createHttp(instance);
 
-const $headers = createStore<any>(
-  {},
-  {
-    serialize: 'ignore',
-  },
-);
-
-interface CreateAxiosInstancePayload {
-  config?: CreateAxiosDefaults<any>;
-  options?: {
-    takeLast?: boolean;
-  };
-}
-
-const createAxiosInstance = ({ config, options }: CreateAxiosInstancePayload | void = {}) => {
-  const instance = axios.create({ ...defaultConfig, ...config });
-  if (options?.takeLast) {
-    addTakeLast(instance);
-  }
-
-  return instance;
-};
-
-const setupAxiosFx = createEffect<CreateAxiosInstancePayload | void, AxiosInstance>(
-  createAxiosInstance,
-);
-
-// Initial value for axios instance
-const $axios = createStore<AxiosInstance>(
-  createAxiosInstance({ options: { takeLast: typeof window !== 'undefined' } }),
-  {
-    serialize: 'ignore',
-  },
-);
-
-const http = createHttp($axios, $headers);
-
-// Replace axios instance on setup updates
-sample({
-  clock: setupAxiosFx.doneData,
-  target: http.updateHttpInstance,
+const routesConfig = http.createRoutesConfig({
+    storage: {
+        /**
+         * No description
+         *
+         * @tags storage
+         * @name UploadMultipartFile
+         * @request POST:/api-v1/storage/multipart-upload
+         */
+        uploadMultipartFile: http.createRoute<{
+            query: {
+                /** Folder where files should be uploaded (start with categories) */
+                folder: string;
+            };
+            data: {
+                files ? : File[];
+            };
+        }, string[]>
+        ((dto) => ({
+            url: `/api/multipart-upload`,
+            method: 'POST',
+            params: dto.query,
+            data: dto.data,
+            formData: true,
+        })),
+    },
 });
 
-export { http, $headers, setupAxiosFx, createAxiosInstance };
+const api = routesConfig.build();
+
+export {
+    api
+}

@@ -1,5 +1,15 @@
 
 {
-  "presets": ["next/babel"],
-  "plugins": ["effector/babel-plugin"]
+  "presets": ["next/babel", "effector-http-api/babel-preset", "patronum/babel-preset"],
+  "plugins": [
+    [
+      "effector/babel-plugin",
+      {
+        "factories": [
+          "effector-http-api"
+        ],
+        "addLoc": true
+      }
+    ]
+  ]
 }
