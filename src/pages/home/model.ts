@@ -1,5 +1,5 @@
 import { EffectParams, attach, combine, createEffect, createEvent, createStore, sample } from 'effector'
-import { api } from '../shared/api';
+import { api } from '@/shared/api';
 import { FileRejection, FileWithPath } from '@mantine/dropzone';
 import { debug } from 'patronum/debug';
 
@@ -22,23 +22,24 @@ sample({
   clock: dropTriggered,
   source: $uploadQuery,
   fn: ({ folder }, filesWithPath) => {
-    const formData = new FormData();
-
-    filesWithPath.forEach((file) => {
-      formData.append('file', file, file.name);
+    const files = filesWithPath.map((file) => {
+    return new File([file], file.name, { type: file.type });
     });
 
-    const files = formData.getAll('file');
+    console.log({ files });
 
-    console.log('FILES', files);
+    const formData = new FormData();
+    files.forEach((file) => {
+    formData.append('files', file);
+    });
+
+    console.log('FILES_IN_MODEL', files);
 
     return {
       query: {
         folder,
       },
-      data: {
-        files,
-      },
+      data: formData,
     } as UploadFxParams;
   },
   target: uploadMultipartFileFx,
