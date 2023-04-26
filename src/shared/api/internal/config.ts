@@ -6,8 +6,8 @@ import { addTakeLast } from './lib';
 
 // default axios config
 const defaultConfig: Parameters<typeof axios.create>[0] = {
-  baseURL: 'http://localhost:3000',
-  // withCredentials: true,
+  baseURL: 'http://localhost:3001',
+  withCredentials: true,
 };
 
 const $headers = createStore<any>(
