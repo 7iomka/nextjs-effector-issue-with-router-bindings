@@ -3277,16 +3277,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"effector-http-api@npm:^2.4.0":
-  version: 2.4.0
-  resolution: "effector-http-api@npm:2.4.0"
+"effector-http-api@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "effector-http-api@npm:2.5.0"
   dependencies:
     axios: ^1.1.3
     effector: ^22.3.0
   peerDependencies:
     axios: ^1.1.3
     effector: ^22.3.0
-  checksum: 520bd1adf5f4e838bc1443655bc4d6bf36f6f903be0a793befbb792dc9710d3562340089f80d1b9e196376d24c2ed43f51e75e13561716ec111c36ccd2692514
+  checksum: 6fbc7d9454dbaca8056ab526e52362ef6dbe4a88eea8ff0845e0666bd4d205652045a722140e4e2e49a99dd061241bbdf6fc3086d25784a67252d029c27735d0
   languageName: node
   linkType: hard
 
@@ -6440,7 +6440,7 @@ __metadata:
     babel-plugin-module-resolver: ^4.1.0
     clsx: ^1.1.1
     effector: ^22.8.1
-    effector-http-api: ^2.4.0
+    effector-http-api: ^2.5.0
     effector-react: ^22.5.1
     esbuild: ^0.14.43
     eslint: ^8.16.0

@@ -22,7 +22,7 @@ export const $isDropzoneDisabled = $isUploadPending;
 const isObject = (source: unknown): source is Record<string, unknown> =>
   !!source && typeof source === 'object';
 
-const formatNonBlobToFormDataProperty = (property: unknown) =>
+  const formatNonBlobToFormDataProperty = (property: unknown) =>
   typeof property === 'object' && property !== null
     ? JSON.stringify(property)
     : `${property}`;
@@ -30,7 +30,12 @@ const formatNonBlobToFormDataProperty = (property: unknown) =>
 const isNeedFormatToFormData = <T>(
   config: ApiRequestConfig<T>
 ): config is RequireSingleField<ApiRequestConfig<T>, 'data'> =>
-  !!(config.method !== 'GET' && config.formData && isObject(config.data));
+  !!(
+    config.method !== 'GET' &&
+    config.formData &&
+    isObject(config.data) &&
+    !(config.data instanceof FormData)
+  );
 
 const formatToFormData = <T extends Record<string, unknown>>(
   data: T
@@ -38,15 +43,25 @@ const formatToFormData = <T extends Record<string, unknown>>(
   Object.keys(data || {}).reduce((formData, key) => {
     const property = data[key];
 
-    const value =
-      property instanceof Blob
-        ? property
-        : formatNonBlobToFormDataProperty(property);
+    if (Array.isArray(property)) {
+      property.forEach(prop => {
+        const value =
+          prop instanceof Blob ? prop : formatNonBlobToFormDataProperty(prop);
 
-    formData.append(key, value);
+        formData.append(key, value);
+      });
+    } else {
+      const value =
+        property instanceof Blob
+          ? property
+          : formatNonBlobToFormDataProperty(property);
+
+      formData.append(key, value);
+    }
 
     return formData;
   }, new FormData());
+
 
 sample({
   clock: dropTriggered,
@@ -65,7 +80,7 @@ sample({
         query: {
           folder,
         },
-        data: formData,
+        data: {files: files},
       } as UploadFxParams
 
     const config = {
