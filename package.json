@@ -1,7 +1,6 @@
 {
   "name": "nextjs-effector",
   "version": "0.0.0-set-by-ci",
-  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.js",
